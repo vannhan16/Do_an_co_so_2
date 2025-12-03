@@ -1,0 +1,105 @@
+/* Import Font Inter từ Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0");
+
+/* Cấu hình cơ bản */
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* Tùy chỉnh Icon Material để hiển thị đẹp hơn */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  vertical-align: middle;
+}
+
+/* Hiệu ứng hover cho thẻ sản phẩm (nếu muốn mượt hơn Tailwind mặc định) */
+.product-card {
+  transition: all 0.3s ease-in-out;
+}
+.product-card:hover {
+  transform: translateY(-5px);
+}
+/* --- BUTTON STYLES --- */
+
+/* 1. Nút Thêm vào giỏ hàng (Nổi bật) */
+.btn-cart {
+  background: linear-gradient(
+    135deg,
+    #13ec5b 0%,
+    #0fb645 100%
+  ); /* Màu xanh chuyển sắc */
+  color: white;
+  border: none;
+  border-radius: 50%; /* Tròn xoe */
+  width: 45px !important;
+  height: 45px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 15px rgba(19, 236, 91, 0.4); /* Bóng đổ màu xanh */
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy */
+  cursor: pointer;
+}
+
+.btn-cart:hover {
+  transform: scale(1.15) rotate(-10deg); /* Phóng to và xoay nhẹ khi di chuột */
+  box-shadow: 0 8px 20px rgba(19, 236, 91, 0.6);
+}
+
+.btn-cart:active {
+  transform: scale(0.95); /* Nhấn xuống */
+}
+
+/* 2. Nút Điều hướng trái phải (Trang nhã) */
+.btn-nav {
+  background: white;
+  color: #333;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* Dark mode cho nút nav (Nếu bạn dùng dark mode) */
+.dark .btn-nav {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-color: #374151;
+}
+
+.btn-nav:hover {
+  background: #f3f4f6;
+  border-color: #13ec5b; /* Viền xanh khi hover */
+  color: #13ec5b;
+  transform: translateX(0); /* Reset transform */
+}
+.btn-nav:active {
+  background: #e5e7eb;
+}
+
+/* Riêng nút nav active (Số trang đang chọn) */
+.btn-nav.active {
+  background: #13ec5b;
+  color: white;
+  border-color: #13ec5b;
+  font-weight: bold;
+  box-shadow: 0 2px 10px rgba(19, 236, 91, 0.3);
+}
+/* Ẩn thanh cuộn cho Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ẩn thanh cuộn cho IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
