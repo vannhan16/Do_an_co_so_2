@@ -3,6 +3,9 @@ require_once 'app/Models/BaseModel.php';
 
 class OrderModel extends BaseModel
 {
+    /* ============================================================
+        ORDER LIST + DETAILS
+    ============================================================ */
 
     // 1. Lấy tất cả đơn hàng (Kèm tên bàn nếu có)
     public function getOrders()
@@ -15,6 +18,26 @@ class OrderModel extends BaseModel
         $stmt->execute();
         return $stmt->fetchAll();
     }
+    // Lấy tất cả đơn hàng cho Thu ngân (Trừ đơn đã hủy)
+    public function getActiveOrders()
+    {
+        $sql = "SELECT o.*, t.name as table_name 
+                FROM orders o
+                LEFT JOIN tables t ON o.table_id = t.id
+                WHERE o.status != 'cancelled'
+                ORDER BY 
+                    CASE 
+                        WHEN o.status = 'pending' THEN 1 
+                        WHEN o.status = 'processing' THEN 2 
+                        WHEN o.status = 'completed' THEN 3 
+                        ELSE 4 
+                    END,
+                    o.created_at DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
 
     // 2. Lấy chi tiết món ăn trong đơn (Cho Modal xem chi tiết)
     public function getOrderItems($order_id)
@@ -23,11 +46,16 @@ class OrderModel extends BaseModel
                 FROM order_items oi
                 JOIN products p ON oi.product_id = p.id
                 WHERE oi.order_id = :order_id";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':order_id', $order_id);
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    /* ============================================================
+        UPDATE / DELETE
+    ============================================================ */
 
     // 3. Cập nhật trạng thái đơn
     public function updateStatus($id, $status)
@@ -40,59 +68,66 @@ class OrderModel extends BaseModel
     // 4. Xóa đơn (Nếu cần)
     public function delete($id)
     {
-        // Xóa order_items trước (Do ràng buộc khóa ngoại) - Tuy nhiên nếu setup DB ON DELETE CASCADE thì chỉ cần xóa orders
         $sql = "DELETE FROM orders WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([':id' => $id]);
     }
-    public function createOrder($userId, $customerName, $customerEmail, $totalAmount, $note, $cartItems)
+
+    /* ============================================================
+        CREATE ORDER (TRANSACTION)
+    ============================================================ */
+
+    // --- HÀM TẠO ĐƠN HÀNG (QUAN TRỌNG) ---
+    public function createOrder($userId, $customerName, $totalAmount, $note, $cartItems)
     {
         try {
-            // 1. Bắt đầu giao dịch (Transaction)
+            // 1. Bắt đầu giao dịch
             $this->conn->beginTransaction();
 
-            // 2. Lưu vào bảng ORDERS trước
-            $sqlOrder = "INSERT INTO orders (user_id, customer_name, customer_email, total_amount, note, status, created_at) 
-                         VALUES (:user_id, :name, :email, :total, :note, 'pending', NOW())";
+            // 2. Lưu thông tin chung vào bảng ORDERS
+            $sqlOrder = "INSERT INTO orders (user_id, customer_name, total_amount, note, status, created_at) 
+                         VALUES (:user_id, :name, :total, :note, 'pending', NOW())";
 
             $stmt = $this->conn->prepare($sqlOrder);
             $stmt->execute([
-                ':user_id' => $userId,
+                ':user_id' => $userId, // Có thể là NULL nếu khách tự đặt
                 ':name' => $customerName,
-                ':email' => $customerEmail,
                 ':total' => $totalAmount,
                 ':note' => $note
             ]);
 
-            // Lấy ID của đơn hàng vừa tạo
+            // Lấy ID đơn hàng vừa tạo
             $orderId = $this->conn->lastInsertId();
 
             // 3. Lưu chi tiết vào bảng ORDER_ITEMS
-            $sqlItem = "INSERT INTO order_items (order_id, product_id, product_name, quantity, price) 
-                        VALUES (:order_id, :product_id, :product_name, :quantity, :price)";
+            $sqlItem = "INSERT INTO order_items (order_id, product_id, quantity, price) 
+                        VALUES (:order_id, :product_id, :quantity, :price)";
             $stmtItem = $this->conn->prepare($sqlItem);
 
             foreach ($cartItems as $item) {
                 $stmtItem->execute([
                     ':order_id' => $orderId,
                     ':product_id' => $item['id'],
-                    ':product_name' => $item['name'],
                     ':quantity' => $item['qty'],
                     ':price' => $item['price']
                 ]);
             }
 
-            // 4. Nếu mọi thứ Ok -> Lưu chính thức (Commit)
+            // 4. Lưu thành công
             $this->conn->commit();
             return true;
         } catch (Exception $e) {
-            // 5. Nếu có lỗi -> Hủy bỏ toàn bộ (Rollback)
+            // 5. Nếu lỗi thì hoàn tác
             $this->conn->rollBack();
-            // Ghi log lỗi để debug (tùy chọn)
-            // error_log($e->getMessage());
             return false;
         }
     }
+
+    /* ============================================================
+        DASHBOARD - REVENUE & STATS
+    ============================================================ */
+
+    // Tổng doanh thu (completed only)
     public function getTotalRevenue()
     {
         $sql = "SELECT SUM(total_amount) as total FROM orders WHERE status = 'completed'";
@@ -102,7 +137,7 @@ class OrderModel extends BaseModel
         return $result['total'] ?? 0;
     }
 
-    // 2. Lấy tổng số giao dịch
+    // Tổng số giao dịch hoàn tất
     public function getTotalTransactions()
     {
         $sql = "SELECT COUNT(*) as total FROM orders WHERE status = 'completed'";
@@ -111,7 +146,8 @@ class OrderModel extends BaseModel
         $result = $stmt->fetch();
         return $result['total'] ?? 0;
     }
-    // 4. Lấy 10 giao dịch gần nhất
+
+    // 10 đơn gần nhất
     public function getRecentTransactions()
     {
         $sql = "SELECT * FROM orders ORDER BY created_at DESC LIMIT 10";
@@ -119,9 +155,61 @@ class OrderModel extends BaseModel
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    // Doanh thu hôm nay
+    public function getTodayRevenue()
+    {
+        $sql = "SELECT SUM(total_amount) as total FROM orders 
+                WHERE status = 'completed' 
+                AND DATE(created_at) = CURDATE()";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
+
+    // Số đơn đang chờ
+    public function countPendingOrders()
+    {
+        $sql = "SELECT COUNT(*) as total FROM orders WHERE status IN ('pending', 'processing')";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
+
+    // Số khách mới hôm nay
+    public function countNewCustomersToday()
+    {
+        $sql = "SELECT COUNT(DISTINCT customer_name) as total 
+                FROM orders 
+                WHERE DATE(created_at) = CURDATE()";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
+
+    // 5 đơn gần nhất
+    public function getLatestOrders($limit = 5)
+    {
+        $sql = "SELECT * FROM orders ORDER BY id DESC LIMIT :limit";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /* ============================================================
+        REVENUE CHART DATA
+    ============================================================ */
+
     public function getRevenueChartData($startDate, $endDate)
     {
-        // 1. Lấy dữ liệu thô từ Database (Gộp theo ngày)
+        // Lấy dữ liệu tổng hợp theo ngày
         $sql = "SELECT DATE(created_at) as date, SUM(total_amount) as total 
                 FROM orders 
                 WHERE status = 'completed' 
@@ -130,25 +218,24 @@ class OrderModel extends BaseModel
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':start' => $startDate, ':end' => $endDate]);
-        $results = $stmt->fetchAll(PDO::FETCH_KEY_PAIR); // Trả về dạng ['2023-10-01' => 150000, ...]
 
-        // 2. Lấp đầy các ngày còn thiếu (để biểu đồ không bị đứt đoạn)
+        $results = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        // Lấp ngày trống
         $data = [];
         $current = new DateTime($startDate);
-        $end = new DateTime($endDate);
+        $end     = new DateTime($endDate);
 
-        // Vòng lặp từ ngày bắt đầu đến ngày kết thúc
         while ($current <= $end) {
             $dateString = $current->format('Y-m-d');
-            $label = $current->format('d/m'); // Nhãn hiển thị (05/12)
+            $label      = $current->format('d/m');
 
             $data[] = [
-                'date' => $label,
-                // Nếu ngày đó có trong DB thì lấy, không thì bằng 0
+                'date'  => $label,
                 'total' => $results[$dateString] ?? 0
             ];
 
-            $current->modify('+1 day'); // Tăng thêm 1 ngày
+            $current->modify('+1 day');
         }
 
         return $data;

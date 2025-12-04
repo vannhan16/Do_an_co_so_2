@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between h-16">
 
             <div class="flex items-center gap-4">
-                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
 
@@ -18,59 +18,104 @@
             </div>
 
             <nav class="hidden md:flex items-center gap-8 mx-6">
-                <a href="index.php?page=menu" class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary transition-colors">
-                    Thực đơn
-                </a>
-                <a href="index.php?page=tracking" class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary transition-colors">
-                    Theo dõi đơn
-                </a>
-                <a href="#" class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary transition-colors">
-                    Khuyến mãi
-                </a>
+                <a href="index.php?page=menu" class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary transition-colors">Thực đơn</a>
+                <a href="index.php?page=tracking" class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary transition-colors">Theo dõi đơn</a>
+                <a href="#" class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary transition-colors">Khuyến mãi</a>
             </nav>
 
             <div class="hidden md:flex flex-1 max-w-xs">
-                <div class="relative w-full">
-                    <span class="absolute left-3 top-2.5 text-gray-400">
+                <form action="index.php" method="GET" class="relative w-full">
+                    <input type="hidden" name="page" value="menu">
+                    <span class="absolute left-3 top-2.5 text-gray-400 pointer-events-none">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text"
-                        class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary text-sm transition-all placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white"
+                    <input type="text" name="q" value="<?= isset($_GET['q']) ? htmlspecialchars($_GET['q']) : '' ?>"
+                        class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary text-sm transition-all placeholder-gray-500 text-gray-900 dark:text-white"
                         placeholder="Tìm món...">
-                </div>
+                </form>
             </div>
 
             <div class="flex items-center gap-3 ml-4">
-                <button class="md:hidden p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+
+                <button id="mobile-search-btn" class="md:hidden p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
 
-                <button onclick="toggleCart()" class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors group">
+                <button onclick="toggleCart()" class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-primary transition-colors group">
                     <i class="fa-solid fa-cart-shopping text-xl group-hover:scale-110 transition-transform"></i>
                     <span id="cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-sm">0</span>
                 </button>
 
-                <button class="w-8 h-8 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 ml-2">
-                    <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User" class="w-full h-full object-cover">
-                </button>
+
             </div>
         </div>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 absolute w-full left-0 top-16 shadow-lg">
+    <div id="mobile-search-bar" class="hidden md:hidden px-4 pb-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 animate-fade-in-down">
+        <form action="index.php" method="GET" class="relative mt-3">
+            <input type="hidden" name="page" value="menu">
+            <input type="text" name="q" value="<?= isset($_GET['q']) ? htmlspecialchars($_GET['q']) : '' ?>"
+                class="w-full pl-4 pr-12 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary text-sm text-gray-900 dark:text-white"
+                placeholder="Nhập tên món ăn...">
+
+            <button type="submit" class="absolute right-2 top-1.5 p-1.5 bg-primary text-white rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </form>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 absolute w-full left-0 shadow-lg z-40">
         <div class="px-4 pt-2 pb-4 space-y-1">
-            <a href="index.php?page=menu" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
-                <i class="fa-solid fa-mug-hot w-6"></i> Thực đơn
+            <a href="index.php?page=menu" class="block px-3 py-3 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
+                <i class="fa-solid fa-mug-hot w-6 text-center"></i> Thực đơn
             </a>
-            <a href="index.php?page=tracking" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
-                <i class="fa-solid fa-clock-rotate-left w-6"></i> Theo dõi đơn
+            <a href="index.php?page=tracking" class="block px-3 py-3 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
+                <i class="fa-solid fa-clock-rotate-left w-6 text-center"></i> Theo dõi đơn
             </a>
-            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
-                <i class="fa-solid fa-tags w-6"></i> Khuyến mãi
+            <a href="#" class="block px-3 py-3 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
+                <i class="fa-solid fa-tags w-6 text-center"></i> Khuyến mãi
             </a>
-            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary">
-                <i class="fa-solid fa-phone w-6"></i> Liên hệ
-            </a>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="index.php?page=logout" class="block px-3 py-3 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
+                    <i class="fa-solid fa-arrow-right-from-bracket w-6 text-center"></i> Đăng xuất
+                </a>
+            <?php else: ?>
+                <a href="index.php?page=login" class="block px-3 py-3 rounded-md text-base font-medium text-primary hover:bg-green-50">
+                    <i class="fa-solid fa-user w-6 text-center"></i> Đăng nhập
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 </header>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Toggle Mobile Menu
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                // Đóng search bar nếu đang mở cho đỡ rối
+                document.getElementById('mobile-search-bar').classList.add('hidden');
+            });
+        }
+
+        // 2. Toggle Mobile Search (MỚI)
+        const searchBtn = document.getElementById('mobile-search-btn');
+        const searchBar = document.getElementById('mobile-search-bar');
+
+        if (searchBtn && searchBar) {
+            searchBtn.addEventListener('click', () => {
+                searchBar.classList.toggle('hidden');
+                // Tự động focus vào ô input khi mở
+                if (!searchBar.classList.contains('hidden')) {
+                    searchBar.querySelector('input[name="q"]').focus();
+                    // Đóng menu nếu đang mở
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>

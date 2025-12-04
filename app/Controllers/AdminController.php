@@ -9,26 +9,40 @@ class AdminController
     // 1. TRANG DASHBOARD (TỔNG QUAN)
     public function index()
     {
-        // Thống kê giả lập
+        $orderModel = new OrderModel();
+        $productModel = new ProductModel();
+
+        // 1. LẤY SỐ LIỆU THẺ (CARDS)
+        $todayRevenue = $orderModel->getTodayRevenue();
+        $pendingOrders = $orderModel->countPendingOrders();
+        $newCustomers = $orderModel->countNewCustomersToday();
+        $totalDrinks = $productModel->countTotalProducts();
+
         $stats = [
-            'sales' => ['value' => 1480.50, 'trend' => '+12%', 'is_increase' => true],
-            'orders' => ['value' => 26, 'sub' => 'Đang chờ xử lý'],
-            'customers' => ['value' => 12, 'trend' => '+5', 'is_increase' => true],
-            'drinks' => ['value' => 87, 'sub' => 'Đang có trong menu']
+            'sales' => ['value' => $todayRevenue, 'trend' => 'Hôm nay'],
+            'orders' => ['value' => $pendingOrders, 'sub' => 'Đang chờ xử lý'],
+            'customers' => ['value' => $newCustomers, 'trend' => 'Hôm nay'],
+            'drinks' => ['value' => $totalDrinks, 'sub' => 'Món trong menu']
         ];
 
-        // Đơn hàng gần đây
-        $recent_orders = [
-            ['id' => '#8823', 'name' => 'Nguyễn Văn A', 'total' => 45.00, 'status' => 'Paid'],
-            ['id' => '#8822', 'name' => 'Trần Thị B', 'total' => 21.50, 'status' => 'Pending'],
-            ['id' => '#8821', 'name' => 'Lê Văn C', 'total' => 112.80, 'status' => 'Paid'],
-            ['id' => '#8820', 'name' => 'Phạm Thị D', 'total' => 8.25, 'status' => 'Cancelled'],
-            ['id' => '#8819', 'name' => 'Hoàng Văn E', 'total' => 34.00, 'status' => 'Paid'],
+        // 2. LẤY DỮ LIỆU BIỂU ĐỒ (7 ngày qua)
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-6 days'));
+        $chartRaw = $orderModel->getRevenueChartData($startDate, $endDate);
+
+        $chartData = [
+            'labels' => array_column($chartRaw, 'label'), // ['01/12', '02/12'...]
+            'values' => array_column($chartRaw, 'value')  // [150000, 200000...]
         ];
 
+        // 3. LẤY ĐƠN HÀNG GẦN ĐÂY
+        $recent_orders = $orderModel->getLatestOrders(5);
+
+        // Gửi sang View
         $data = [
             'stats' => $stats,
-            'recent_orders' => $recent_orders
+            'recent_orders' => $recent_orders,
+            'chartData' => $chartData
         ];
 
         $this->loadView('admin/dashboard', $data);

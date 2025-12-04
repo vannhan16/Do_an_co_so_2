@@ -182,10 +182,23 @@ switch ($page) {
     // ====================================================
     // KHU VỰC 3: STAFF (THU NGÂN)
     // ====================================================
+
     case 'staff':
         require_once 'app/Controllers/StaffController.php';
         $controller = new StaffController();
         $controller->index();
+        break;
+
+    case 'staff_get_detail': // API lấy món
+        require_once 'app/Controllers/StaffController.php';
+        $controller = new StaffController();
+        $controller->get_order_detail();
+        break;
+
+    case 'staff_update_status': // Cập nhật trạng thái
+        require_once 'app/Controllers/StaffController.php';
+        $controller = new StaffController();
+        $controller->update_status();
         break;
 
 
@@ -203,5 +216,10 @@ switch ($page) {
         require_once 'app/Controllers/MenuController.php';
         $controller = new MenuController();
         $controller->index();
+        break;
+    case 'checkout_submit':
+        require_once 'app/Controllers/MenuController.php';
+        $controller = new MenuController();
+        $controller->checkout_submit();
         break;
 }

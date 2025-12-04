@@ -78,7 +78,7 @@
                     </div>
 
                     <button onclick="addToCartFromModal()" class="flex-1 bg-primary text-white font-bold h-11 rounded-xl shadow-lg shadow-green-500/30 active:scale-95 flex items-center justify-center gap-2 transition-transform">
-                        <span class="text-sm">Thêm</span>
+                        <span class="text-sm">Thêm vào giỏ</span>
                         <span class="w-1 h-1 bg-white/50 rounded-full"></span>
                         <span id="btn-total-price" class="text-sm">0đ</span>
                     </button>

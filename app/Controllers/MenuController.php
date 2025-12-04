@@ -2,6 +2,7 @@
 // app/Controllers/MenuController.php
 require_once 'app/Models/ProductModel.php';
 require_once 'app/Models/CategoryModel.php';
+require_once 'app/Models/OrderModel.php';
 
 class MenuController
 {
@@ -11,56 +12,89 @@ class MenuController
         $productModel = new ProductModel();
         $categoryModel = new CategoryModel();
 
-        // 1. LẤY DANH MỤC (Cho thanh Tabs)
-        $categories_data = $categoryModel->getCategories();
-        // Chuyển đổi format để khớp với View cũ (nếu cần) hoặc dùng trực tiếp
-        // Ở đây mình sẽ dùng trực tiếp trong View cho tối ưu
+        // --- LOGIC MỚI: BẮT SỐ BÀN TỪ QR CODE ---
+        // Nếu trên URL có tham số 'table_name' (do quét QR)
+        if (isset($_GET['table_name']) && !empty($_GET['table_name'])) {
+            // Lưu vào Session để dùng xuyên suốt phiên làm việc
+            $_SESSION['current_table'] = urldecode($_GET['table_name']);
+        }
 
-        // 2. LẤY SẢN PHẨM TỪ DATABASE
-        // Kiểm tra xem có đang lọc theo danh mục không?
-        $category_id = isset($_GET['category_id']) ? $_GET['category_id'] : 'all';
-        $keyword = isset($_GET['q']) ? $_GET['q'] : '';
+        // 1. LẤY DANH MỤC
+        $categories = $categoryModel->getCategories();
 
-        // Nếu có từ khóa tìm kiếm
+        // 2. XỬ LÝ LỌC & TÌM KIẾM
+        $categoryId = $_GET['category_id'] ?? 'all';
+        $keyword = $_GET['q'] ?? '';
+        $page = $_GET['page_no'] ?? 1;
+
+        $products = [];
+
         if (!empty($keyword)) {
-            $all_products = $productModel->searchProducts($keyword);
-        }
-        // Nếu lọc theo danh mục (ID)
-        elseif ($category_id !== 'all') {
-            // Chúng ta cần thêm hàm getProductsByCategory vào Model sau này
-            // Tạm thời lấy tất cả rồi lọc bằng PHP (hoặc viết thêm hàm trong Model thì tốt hơn)
-            $all_products = $productModel->getProductsByCategoryId($category_id);
-        }
-        // Lấy tất cả
-        else {
-            $all_products = $productModel->getProducts();
+            // Tìm kiếm
+            $products = $productModel->searchProducts($keyword);
+        } elseif ($categoryId !== 'all') {
+            // Lọc theo danh mục
+            $products = $productModel->getProductsByCategoryId($categoryId);
+        } else {
+            // Lấy tất cả
+            $products = $productModel->getProducts();
         }
 
-        // 3. PHÂN TRANG (PAGINATION)
-        $current_page = isset($_GET['page_no']) ? (int)$_GET['page_no'] : 1;
-        $items_per_page = 8; // Số món trên 1 trang
-        $total_items = count($all_products);
-        $total_pages = ceil($total_items / $items_per_page);
+        // 3. PHÂN TRANG (8 món/trang)
+        $itemsPerPage = 8;
+        $totalItems = count($products);
+        $totalPages = ceil($totalItems / $itemsPerPage);
 
-        // Đảm bảo trang hợp lệ
-        if ($current_page < 1) $current_page = 1;
-        if ($current_page > $total_pages && $total_pages > 0) $current_page = $total_pages;
+        // Cắt mảng cho trang hiện tại
+        $offset = ($page - 1) * $itemsPerPage;
+        $displayProducts = array_slice($products, $offset, $itemsPerPage);
 
-        // Cắt mảng dữ liệu
-        $offset = ($current_page - 1) * $items_per_page;
-        $display_products = array_slice($all_products, $offset, $items_per_page);
-
-        // 4. GỬI DỮ LIỆU SANG VIEW
+        // 4. GỬI SANG VIEW
         $data = [
-            'categories' => $categories_data,
-            'products' => $display_products, // Danh sách món trang hiện tại
-            'current_category' => $category_id,
-            'current_page' => $current_page,
-            'total_pages' => $total_pages,
-            'keyword' => $keyword
+            'categories' => $categories,
+            'products' => $displayProducts,
+            'current_category' => $categoryId,
+            'current_page' => $page,
+            'total_pages' => $totalPages,
+            'keyword' => $keyword,
+            'table_name' => $_SESSION['current_table'] ?? ''
         ];
 
         $this->loadView('client/menu', $data);
+    }
+    // --- HÀM MỚI: NHẬN DỮ LIỆU THANH TOÁN (AJAX) ---
+    public function checkout_submit()
+    {
+        // 1. Nhận dữ liệu JSON
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        header('Content-Type: application/json');
+
+        if (!$data) {
+            echo json_encode(['success' => false, 'message' => 'Dữ liệu rỗng']);
+            exit;
+        }
+
+        // 2. Lấy thông tin
+        // Nếu khách tự đặt thì user_id = NULL, nếu nhân viên đặt hộ thì lấy ID nhân viên
+        $userId = $_SESSION['user_id'] ?? null;
+
+        $customerName = $data['customer_name'];
+        $note = $data['note'];
+        $totalAmount = $data['total_amount'];
+        $cartItems = $data['cart_items'];
+
+        // 3. Gọi Model
+        $orderModel = new OrderModel();
+        $result = $orderModel->createOrder($userId, $customerName, $totalAmount, $note, $cartItems);
+
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi Database']);
+        }
+        exit;
     }
 
     private function loadView($viewPath, $data = [])

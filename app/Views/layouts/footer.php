@@ -32,7 +32,7 @@
 
         <div class="text-center border-t border-gray-200 dark:border-gray-700 pt-8">
             <p class="text-sm text-gray-500 dark:text-gray-500">
-                © 2024 <span class="font-bold text-gray-700 dark:text-gray-300">Drinky</span>. All rights reserved.
+                © 2025 <span class="font-bold text-gray-700 dark:text-gray-300">Drinky</span>. All rights reserved.
             </p>
         </div>
     </div>

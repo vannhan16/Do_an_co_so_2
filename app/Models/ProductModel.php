@@ -94,4 +94,13 @@ class ProductModel extends BaseModel
         $stmt->execute();
         return $stmt->fetchAll();
     }
+    // Đếm tổng số món ăn
+    public function countTotalProducts()
+    {
+        $sql = "SELECT COUNT(*) as total FROM products";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
 }

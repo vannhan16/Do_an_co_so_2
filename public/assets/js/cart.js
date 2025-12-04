@@ -150,7 +150,91 @@ function updateCartIconCount() {
     iconBadge.classList.toggle("hidden", totalQty === 0);
   }
 }
+// public/assets/js/cart.js
 
+// ... (Các hàm toggleCart, addToCart, renderCart... giữ nguyên như cũ) ...
+
+// --- THÊM/SỬA HÀM NÀY Ở CUỐI FILE ---
+
+window.processCheckout = function () {
+  // 1. Kiểm tra giỏ hàng
+  if (cart.length === 0) {
+    alert("Giỏ hàng đang trống!");
+    return;
+  }
+
+  // 2. Lấy thông tin từ các ô Input trong cart_drawer.php
+  const nameEl = document.getElementById("cust-name");
+  const tableEl = document.getElementById("cust-table");
+  const noteEl = document.getElementById("cust-note");
+
+  // Kiểm tra xem các ô input có tồn tại không (Tránh lỗi null)
+  if (!nameEl || !tableEl) {
+    alert("Lỗi giao diện: Không tìm thấy ô nhập tên/bàn.");
+    return;
+  }
+
+  const name = nameEl.value.trim();
+  const table = tableEl.value.trim();
+  const note = noteEl ? noteEl.value.trim() : "";
+
+  if (name === "" || table === "") {
+    alert("Vui lòng nhập Tên và Số bàn để chúng tôi phục vụ!");
+    return;
+  }
+
+  // 3. Tính tổng tiền
+  const totalAmount = cart.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
+
+  // 4. Đóng gói dữ liệu
+  const orderData = {
+    customer_name: name + " (Bàn " + table + ")",
+    note: note,
+    total_amount: totalAmount,
+    cart_items: cart,
+  };
+
+  // 5. Hiệu ứng nút bấm
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+  btn.disabled = true;
+
+  // 6. Gửi AJAX
+  fetch("index.php?page=checkout_submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(orderData),
+  })
+    .then((response) => response.json()) // Chuyển phản hồi về JSON
+    .then((data) => {
+      if (data.success) {
+        // Thành công
+        localStorage.removeItem(CART_KEY); // Xóa giỏ hàng cũ
+        cart = [];
+        renderCartDrawer();
+        updateCartIconCount();
+        toggleCart(); // Đóng sidebar
+
+        alert("Đặt món thành công! Vui lòng chờ nhân viên xác nhận.");
+        window.location.href = "index.php?page=tracking"; // Chuyển trang
+      } else {
+        // Thất bại
+        alert("Lỗi: " + data.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Có lỗi xảy ra. Vui lòng thử lại!");
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+};
 // 3. KHỞI CHẠY
 document.addEventListener("DOMContentLoaded", () => {
   saveAndRender();

@@ -1,57 +1,52 @@
 <?php
+require_once 'app/Models/OrderModel.php';
 class StaffController
 {
+    // 1. HIỂN THỊ GIAO DIỆN CHÍNH
     public function index()
     {
-        // 1. GIẢ LẬP DỮ LIỆU ĐƠN HÀNG (Sau này lấy từ DB)
-        $orders = [
-            [
-                'id' => '12345',
-                'customer' => 'Nguyễn Văn A',
-                'time' => '2 phút trước',
-                'status' => 'new', // new, preparing, ready
-                'items_count' => 3,
-                'total' => 125000,
-                'payment_status' => 'Đã thanh toán (Thẻ)',
-                'items' => [
-                    ['name' => 'Cà phê sữa đá', 'note' => 'Ít sữa, nhiều đá', 'qty' => 1, 'price' => 25000],
-                    ['name' => 'Trà đào cam sả', 'note' => '', 'qty' => 2, 'price' => 50000]
-                ]
-            ],
-            [
-                'id' => '12344',
-                'customer' => 'Trần Thị B',
-                'time' => '5 phút trước',
-                'status' => 'new',
-                'items_count' => 1,
-                'total' => 45000,
-                'payment_status' => 'Chưa thanh toán',
-                'items' => [
-                    ['name' => 'Matcha Đá Xay', 'note' => 'Thêm kem', 'qty' => 1, 'price' => 45000]
-                ]
-            ],
-            [
-                'id' => '12343',
-                'customer' => 'Lê Văn C',
-                'time' => '8 phút trước',
-                'status' => 'new',
-                'items_count' => 2,
-                'total' => 60000,
-                'payment_status' => 'Đã thanh toán (Momo)',
-                'items' => [
-                    ['name' => 'Bạc xỉu', 'note' => '', 'qty' => 2, 'price' => 30000]
-                ]
-            ]
-        ];
+        // Kiểm tra quyền (nếu cần)
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
 
-        // Gửi dữ liệu sang View
-        $this->loadView('staff/order_board', ['orders' => $orders]);
+        $orderModel = new OrderModel();
+        $orders = $orderModel->getActiveOrders();
+
+        $data = ['orders' => $orders];
+        $this->loadView('staff/order_board', $data);
+    }
+
+    // 2. API LẤY CHI TIẾT ĐƠN (AJAX)
+    public function get_order_detail()
+    {
+        $id = $_GET['id'] ?? 0;
+        $orderModel = new OrderModel();
+        $items = $orderModel->getOrderItems($id);
+
+        header('Content-Type: application/json');
+        echo json_encode($items);
+        exit;
+    }
+
+    // 3. CẬP NHẬT TRẠNG THÁI
+    public function update_status()
+    {
+        $id = $_GET['id'];
+        $status = $_GET['status']; // pending, processing, completed, cancelled
+
+        $orderModel = new OrderModel();
+        $orderModel->updateStatus($id, $status);
+
+        // Quay lại trang Staff
+        header('Location: index.php?page=staff');
+        exit;
     }
 
     private function loadView($viewPath, $data = [])
     {
         extract($data);
-        // Dùng layout riêng cho nhân viên, không dùng main.php
         include "app/Views/$viewPath.php";
     }
 }

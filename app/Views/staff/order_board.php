@@ -14,7 +14,6 @@
                 extend: {
                     colors: {
                         primary: "#13ec5b",
-                        secondary: "#102216",
                         bgLight: "#f3f4f6"
                     },
                     fontFamily: {
@@ -25,13 +24,8 @@
         }
     </script>
     <style>
-        /* Tùy chỉnh thanh cuộn cho gọn */
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
-        }
-
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
         }
 
         .custom-scroll::-webkit-scrollbar-thumb {
@@ -43,182 +37,192 @@
 
 <body class="bg-bgLight h-screen flex overflow-hidden text-gray-800">
 
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between shrink-0">
-        <div>
-            <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
-                <div class="w-8 h-8 text-primary bg-green-50 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-mug-hot"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-gray-900">Drinky POS</h1>
-                    <p class="text-xs text-gray-500">Thu Ngân</p>
-                </div>
-            </div>
+    <aside class="w-20 bg-white border-r border-gray-200 flex flex-col items-center py-6 shrink-0 z-20">
+        <div class="w-10 h-10 text-primary mb-8"><i class="fa-solid fa-mug-hot text-3xl"></i></div>
 
-            <nav class="p-4 space-y-1">
-                <a href="#" class="flex items-center gap-3 px-4 py-3 bg-green-50 text-primary font-medium rounded-xl">
-                    <i class="fa-solid fa-border-all text-lg"></i> Tổng quan
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
-                    <i class="fa-solid fa-clock-rotate-left text-lg"></i> Lịch sử đơn
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
-                    <i class="fa-solid fa-gear text-lg"></i> Cài đặt
-                </a>
-            </nav>
-        </div>
+        <nav class="flex-1 space-y-6 w-full flex flex-col items-center">
+            <a href="#" class="w-10 h-10 flex items-center justify-center rounded-xl bg-green-50 text-primary shadow-sm"><i class="fa-solid fa-border-all text-xl"></i></a>
+            <a href="#" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-900 transition-colors"><i class="fa-solid fa-clock-rotate-left text-xl"></i></a>
+        </nav>
 
-        <div class="p-4 border-t border-gray-100">
-            <a href="index.php?page=logout" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-red-500 font-medium transition-colors">
-                <i class="fa-solid fa-arrow-right-from-bracket text-lg"></i> Đăng xuất
-            </a>
-        </div>
+        <a href="index.php?page=logout" class="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Đăng xuất">
+            <i class="fa-solid fa-arrow-right-from-bracket text-xl"></i>
+        </a>
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0 border-r border-gray-200 bg-white">
         <div class="h-16 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
             <h2 class="text-xl font-bold">Đơn hàng</h2>
-            <div class="text-sm text-gray-500"><?= date('d/m/Y') ?></div>
+            <div class="text-sm font-medium bg-gray-100 px-3 py-1 rounded-full text-gray-600"><?= count($orders) ?> đơn</div>
         </div>
 
-        <div class="p-4 border-b border-gray-100 space-y-4">
-            <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" placeholder="Tìm theo mã đơn hoặc tên khách..." class="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm">
-            </div>
-            <div class="flex gap-6 border-b border-gray-100">
-                <button class="pb-2 border-b-2 border-primary text-primary font-bold text-sm">Mới (3)</button>
-                <button class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-gray-800 font-medium text-sm">Đang pha (1)</button>
-                <button class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-gray-800 font-medium text-sm">Sẵn sàng (0)</button>
+        <div class="px-4 pt-4 border-b border-gray-100">
+            <div class="flex gap-6">
+                <button class="pb-3 border-b-2 border-primary text-primary font-bold text-sm">Tất cả</button>
+                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-800 font-medium text-sm">Chờ xử lý</button>
+                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-800 font-medium text-sm">Đang pha</button>
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
-            <?php foreach ($orders as $index => $order): ?>
-                <div onclick="selectOrder(<?= htmlspecialchars(json_encode($order)) ?>, this)"
-                    class="order-card p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md 
-                     <?= $index === 0 ? 'border-primary bg-green-50' : 'border-gray-100 bg-white hover:border-green-200' ?>">
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll bg-gray-50">
+            <?php foreach ($orders as $index => $o): ?>
+                <?php
+                // Màu sắc thẻ theo trạng thái
+                $statusColor = 'bg-white border-l-4 border-l-yellow-400'; // Pending
+                $badge = '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-bold rounded">Chờ xử lý</span>';
+
+                if ($o['status'] == 'processing') {
+                    $statusColor = 'bg-white border-l-4 border-l-blue-500';
+                    $badge = '<span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded">Đang pha</span>';
+                }
+                if ($o['status'] == 'completed') {
+                    $statusColor = 'bg-gray-50 border-l-4 border-l-green-500 opacity-70';
+                    $badge = '<span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded">Hoàn thành</span>';
+                }
+                ?>
+
+                <div onclick='selectOrder(<?= json_encode($o) ?>, this)'
+                    class="order-card cursor-pointer p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all <?= $statusColor ?>">
 
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <span class="font-bold text-gray-900 text-lg">#<?= $order['id'] ?></span>
-                            <p class="text-sm text-gray-500"><?= $order['customer'] ?></p>
+                            <span class="font-bold text-gray-900">#<?= $o['id'] ?></span>
+                            <span class="text-xs text-gray-500 ml-2"><?= date('H:i', strtotime($o['created_at'])) ?></span>
                         </div>
-                        <span class="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded">Mới</span>
+                        <?= $badge ?>
                     </div>
 
-                    <div class="flex justify-between items-end mt-4">
-                        <p class="text-sm text-gray-500"><?= $order['items_count'] ?> món</p>
-                        <p class="font-bold text-lg text-gray-900"><?= number_format($order['total']) ?>đ</p>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-sm font-bold text-gray-800"><?= $o['customer_name'] ?: 'Khách lẻ' ?></p>
+                            <?php if ($o['table_name']): ?>
+                                <p class="text-xs text-gray-500 mt-0.5"><i class="fa-solid fa-chair mr-1"></i> <?= $o['table_name'] ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <p class="font-bold text-primary"><?= number_format($o['total_amount'], 0, ',', '.') ?>đ</p>
                     </div>
-                    <p class="text-xs text-right text-gray-400 mt-1"><?= $order['time'] ?></p>
                 </div>
             <?php endforeach; ?>
         </div>
     </main>
 
-    <aside class="w-96 bg-white flex flex-col shrink-0">
-        <div class="h-16 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-gray-50">
-            <div>
-                <h3 class="font-bold text-gray-900" id="detail-id">Chọn đơn hàng</h3>
-                <p class="text-xs text-gray-500" id="detail-customer">...</p>
-            </div>
-            <button class="p-2 bg-white rounded-full shadow-sm text-gray-400 hover:text-gray-600"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+    <aside class="w-96 bg-white flex flex-col shrink-0 h-full shadow-xl z-10">
+        <div id="empty-state" class="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+            <i class="fa-solid fa-receipt text-6xl mb-4 opacity-20"></i>
+            <p>Chọn một đơn hàng để xem chi tiết và thao tác.</p>
         </div>
 
-        <div id="detail-items" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
-            <div class="text-center text-gray-400 mt-10">
-                <i class="fa-solid fa-basket-shopping text-4xl mb-2"></i>
-                <p>Vui lòng chọn đơn hàng bên trái</p>
-            </div>
-        </div>
+        <div id="detail-content" class="hidden flex-col h-full">
 
-        <div class="p-6 border-t border-gray-100 bg-gray-50">
-            <div class="space-y-3 mb-6">
-                <div class="flex justify-between text-gray-600">
-                    <span>Tổng tiền hàng</span>
-                    <span class="font-medium" id="detail-subtotal">0đ</span>
+            <div class="h-16 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-gray-50">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg" id="detail-id">...</h3>
+                    <p class="text-xs text-gray-500" id="detail-time">...</p>
                 </div>
-                <div class="flex justify-between text-xl font-bold text-gray-900">
-                    <span>Thanh toán</span>
-                    <span id="detail-total">0đ</span>
-                </div>
-                <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-gray-200">
-                    <span class="text-xs text-gray-500 uppercase font-bold">Trạng thái</span>
-                    <span class="text-sm font-bold text-green-600 flex items-center gap-1" id="detail-payment">
-                        <i class="fa-solid fa-circle-check"></i> ...
-                    </span>
+                <div id="detail-status-badge"></div>
+            </div>
+
+            <div class="px-6 py-4 border-b border-gray-100 bg-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fa-solid fa-user"></i></div>
+                    <div>
+                        <p class="font-bold text-gray-800 text-sm" id="detail-customer">...</p>
+                        <p class="text-xs text-gray-500" id="detail-note">...</p>
+                    </div>
                 </div>
             </div>
 
-            <button class="w-full py-3.5 bg-primary text-white font-bold rounded-xl shadow-lg shadow-green-500/30 hover:bg-[#0ebc49] transition-all active:scale-95 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-check"></i> Xác nhận đơn hàng
-            </button>
+            <div id="detail-items" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
+            </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-3">
-                <button class="py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors">
-                    <i class="fa-solid fa-truck-fast mr-1"></i> Cập nhật
-                </button>
-                <button class="py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors">
-                    <i class="fa-solid fa-print mr-1"></i> In hóa đơn
-                </button>
+            <div class="p-6 border-t border-gray-100 bg-gray-50">
+                <div class="flex justify-between text-lg font-bold text-gray-900 mb-4">
+                    <span>Tổng cộng</span>
+                    <span id="detail-total" class="text-primary">0đ</span>
+                </div>
+
+                <div id="action-buttons" class="grid gap-3">
+                </div>
             </div>
         </div>
     </aside>
 
     <script>
-        // Hàm format tiền tệ
-        const formatMoney = (amount) => {
-            return new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND'
-            }).format(amount);
-        };
+        const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(amount);
 
-        // Hàm chọn đơn hàng
-        function selectOrder(orderData, cardElement) {
-            // 1. Highlight thẻ được chọn
-            document.querySelectorAll('.order-card').forEach(c => {
-                c.classList.remove('border-primary', 'bg-green-50');
-                c.classList.add('border-gray-100', 'bg-white');
-            });
-            cardElement.classList.remove('border-gray-100', 'bg-white');
-            cardElement.classList.add('border-primary', 'bg-green-50');
+        function selectOrder(order, card) {
+            // 1. Highlight Card
+            document.querySelectorAll('.order-card').forEach(c => c.classList.remove('ring-2', 'ring-primary', 'bg-green-50'));
+            card.classList.add('ring-2', 'ring-primary', 'bg-green-50');
 
-            // 2. Điền dữ liệu vào cột phải
-            document.getElementById('detail-id').innerText = 'Đơn #' + orderData.id;
-            document.getElementById('detail-customer').innerText = 'Khách: ' + orderData.customer;
-            document.getElementById('detail-subtotal').innerText = formatMoney(orderData.total);
-            document.getElementById('detail-total').innerText = formatMoney(orderData.total);
-            document.getElementById('detail-payment').innerHTML = `<i class="fa-solid fa-circle-check"></i> ${orderData.payment_status}`;
+            // 2. Hiện khung chi tiết
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('detail-content').classList.remove('hidden');
+            document.getElementById('detail-content').classList.add('flex');
 
-            // 3. Render danh sách món
+            // 3. Điền thông tin cơ bản
+            document.getElementById('detail-id').innerText = '#' + order.id;
+            document.getElementById('detail-time').innerText = order.created_at;
+            document.getElementById('detail-customer').innerText = order.customer_name + (order.table_name ? ` (${order.table_name})` : '');
+            document.getElementById('detail-note').innerText = order.note ? `Ghi chú: ${order.note}` : 'Không có ghi chú';
+            document.getElementById('detail-total').innerText = formatMoney(order.total_amount);
+
+            // 4. Lấy danh sách món (AJAX)
             const itemsContainer = document.getElementById('detail-items');
-            itemsContainer.innerHTML = '';
+            itemsContainer.innerHTML = '<p class="text-center text-gray-400 text-sm">Đang tải món...</p>';
 
-            orderData.items.forEach(item => {
-                itemsContainer.innerHTML += `
-                    <div class="flex justify-between items-start">
-                        <div class="flex gap-3">
-                            <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm shrink-0">
-                                ${item.qty}x
+            fetch(`index.php?page=staff_get_detail&id=${order.id}`)
+                .then(res => res.json())
+                .then(items => {
+                    let html = '';
+                    items.forEach(item => {
+                        html += `
+                            <div class="flex justify-between items-start border-b border-gray-50 pb-2 last:border-0">
+                                <div class="flex gap-3">
+                                    <span class="font-bold text-gray-500 text-sm">${item.quantity}x</span>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">${item.product_name}</p>
+                                        ${item.note ? `<p class="text-xs text-gray-400 italic">${item.note}</p>` : ''}
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">${formatMoney(item.price * item.quantity)}</span>
                             </div>
-                            <div>
-                                <h4 class="font-medium text-gray-900">${item.name}</h4>
-                                ${item.note ? `<p class="text-xs text-gray-500 italic">Note: ${item.note}</p>` : ''}
-                            </div>
-                        </div>
-                        <span class="font-medium text-gray-900">${formatMoney(item.price * item.qty)}</span>
-                    </div>
+                        `;
+                    });
+                    itemsContainer.innerHTML = html;
+                });
+
+            // 5. Cập nhật nút bấm theo trạng thái
+            const btnContainer = document.getElementById('action-buttons');
+            let btns = '';
+
+            if (order.status == 'pending') {
+                btns = `
+                    <a href="index.php?page=staff_update_status&id=${order.id}&status=processing" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-center shadow-lg transition-colors">
+                        <i class="fa-solid fa-fire-burner mr-2"></i> Bắt đầu pha chế
+                    </a>
+                    <a href="index.php?page=staff_update_status&id=${order.id}&status=cancelled" class="w-full py-3 bg-white border border-red-200 text-red-600 font-bold rounded-xl text-center hover:bg-red-50 transition-colors">
+                        Hủy đơn
+                    </a>
                 `;
-            });
+            } else if (order.status == 'processing') {
+                btns = `
+                    <a href="index.php?page=staff_update_status&id=${order.id}&status=completed" class="w-full py-3 bg-primary hover:bg-[#0ebc49] text-white font-bold rounded-xl text-center shadow-lg shadow-green-500/30 transition-colors">
+                        <i class="fa-solid fa-check mr-2"></i> Hoàn thành & Thu tiền
+                    </a>
+                `;
+            } else {
+                btns = `
+                    <button disabled class="w-full py-3 bg-gray-100 text-gray-400 font-bold rounded-xl text-center cursor-not-allowed">
+                        Đơn đã hoàn tất
+                    </button>
+                `;
+            }
+            btnContainer.innerHTML = btns;
         }
-
-        // Tự động chọn đơn đầu tiên khi vào trang
-        document.addEventListener('DOMContentLoaded', () => {
-            const firstCard = document.querySelector('.order-card');
-            if (firstCard) firstCard.click();
-        });
     </script>
 </body>
 
