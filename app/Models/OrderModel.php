@@ -19,13 +19,24 @@ class OrderModel extends BaseModel
         return $stmt->fetchAll();
     }
     // Lấy tất cả đơn hàng cho Thu ngân (Trừ đơn đã hủy)
-    public function getActiveOrders()
+    // Lấy đơn hàng cho Thu ngân (Có hỗ trợ lọc)
+    public function getActiveOrders($filter = 'all')
     {
         $sql = "SELECT o.*, t.name as table_name 
                 FROM orders o
                 LEFT JOIN tables t ON o.table_id = t.id
-                WHERE o.status != 'cancelled'
-                ORDER BY 
+                WHERE o.status != 'cancelled'";
+
+        $params = [];
+
+        // Nếu có lọc theo trạng thái cụ thể
+        if ($filter !== 'all') {
+            $sql .= " AND o.status = :status";
+            $params[':status'] = $filter;
+        }
+
+        // Sắp xếp: Ưu tiên đơn mới nhất lên đầu
+        $sql .= " ORDER BY 
                     CASE 
                         WHEN o.status = 'pending' THEN 1 
                         WHEN o.status = 'processing' THEN 2 
@@ -33,8 +44,9 @@ class OrderModel extends BaseModel
                         ELSE 4 
                     END,
                     o.created_at DESC";
+
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

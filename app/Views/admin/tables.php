@@ -95,14 +95,9 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-3">
-                                            <div class="relative group/qr">
-                                                <button class="text-gray-400 hover:text-gray-800"><i class="fa-solid fa-qrcode"></i></button>
-                                                <?php if (!empty($t['qr_code'])): ?>
-                                                    <div class="absolute bottom-full right-0 mb-2 w-40 p-2 bg-white rounded-lg shadow-xl border border-gray-200 hidden group-hover/qr:block z-50">
-                                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?= urlencode($t['qr_code']) ?>" class="w-full h-auto rounded">
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
+                                            <button onclick='openQRModal(<?= json_encode(["id" => $t["id"], "name" => $t["name"], "qr_code" => $t["qr_code"]]) ?>)' class="text-gray-400 hover:text-gray-800 transition-colors">
+                                                <i class="fa-solid fa-qrcode"></i>
+                                            </button>
 
                                             <button onclick='openEditTable(<?= json_encode($t, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="text-gray-400 hover:text-blue-600"><i class="fa-solid fa-pen"></i></button>
 
@@ -125,6 +120,67 @@
     <?php include __DIR__ . '/components/add_table_modal.php'; ?>
 
     <?php include __DIR__ . '/components/update_table_modal.php'; ?>
+
+    <!-- Modal hiển thị QR Code -->
+    <div id="qr-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeQRModal()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl p-8 relative z-10 max-w-md w-full">
+            <button onclick="closeQRModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-2" id="qr-modal-title">Mã QR - Bàn</h2>
+            <p class="text-gray-500 text-sm mb-6" id="qr-modal-subtitle">Quét QR để gọi món tại bàn này</p>
+
+            <div class="flex flex-col items-center gap-6">
+                <div class="bg-gray-100 p-4 rounded-xl">
+                    <img id="qr-image" src="" alt="QR Code" class="w-64 h-64 object-contain">
+                </div>
+
+                <button onclick="downloadQR()" class="w-full bg-primary hover:bg-[#0ebc49] text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> Tải xuống
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openQRModal(table) {
+            if (!table.qr_code) {
+                alert('Bàn này chưa có mã QR');
+                return;
+            }
+
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(table.qr_code)}`;
+            document.getElementById('qr-image').src = qrUrl;
+            document.getElementById('qr-modal-title').innerText = `Mã QR - ${table.name}`;
+            document.getElementById('qr-modal').classList.remove('hidden');
+
+            // Lưu URL để dùng trong download
+            window.currentQRUrl = qrUrl;
+            window.currentTableName = table.name;
+        }
+
+        function closeQRModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+        }
+
+        function downloadQR() {
+            if (!window.currentQRUrl) return;
+
+            const link = document.createElement('a');
+            link.href = window.currentQRUrl;
+            link.download = `QR_${window.currentTableName || 'Ban'}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Đóng modal khi bấm ngoài
+        document.getElementById('qr-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeQRModal();
+        });
+    </script>
 </body>
 
 </html>

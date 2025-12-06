@@ -80,7 +80,8 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <button onclick='openEditUser(<?= json_encode($u) ?>)' class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                                            <button onclick='openEditUser(<?= htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8') ?>)'
+                                                class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                                                 <i class="fa-solid fa-pen"></i>
                                             </button>
                                             <a href="index.php?page=delete_user&id=<?= $u['id'] ?>" onclick="return confirm('Xóa tài khoản này?')" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">

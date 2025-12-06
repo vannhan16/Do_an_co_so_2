@@ -58,12 +58,33 @@
 
         <div class="px-4 pt-4 border-b border-gray-100">
             <div class="flex gap-6">
-                <button class="pb-3 border-b-2 border-primary text-primary font-bold text-sm">Tất cả</button>
-                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-800 font-medium text-sm">Chờ xử lý</button>
-                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-800 font-medium text-sm">Đang pha</button>
+                <?php
+                // Hàm hỗ trợ style cho Tab active
+                function activeTab($current, $target)
+                {
+                    if ($current === $target) {
+                        return 'border-primary text-primary font-bold'; // Style khi được chọn
+                    }
+                    return 'border-transparent text-gray-500 hover:text-gray-800 font-medium'; // Style thường
+                }
+                ?>
+
+                <a href="index.php?page=staff&status=all"
+                    class="pb-3 border-b-2 text-sm transition-colors <?= activeTab($current_status, 'all') ?>">
+                    Tất cả
+                </a>
+
+                <a href="index.php?page=staff&status=pending"
+                    class="pb-3 border-b-2 text-sm transition-colors <?= activeTab($current_status, 'pending') ?>">
+                    Chờ xử lý
+                </a>
+
+                <a href="index.php?page=staff&status=processing"
+                    class="pb-3 border-b-2 text-sm transition-colors <?= activeTab($current_status, 'processing') ?>">
+                    Đang pha
+                </a>
             </div>
         </div>
-
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll bg-gray-50">
             <?php foreach ($orders as $index => $o): ?>
                 <?php

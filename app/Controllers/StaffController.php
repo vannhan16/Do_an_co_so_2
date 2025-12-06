@@ -12,9 +12,17 @@ class StaffController
         }
 
         $orderModel = new OrderModel();
-        $orders = $orderModel->getActiveOrders();
+        // 1. Lấy trạng thái từ URL (Mặc định là 'all')
+        $current_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
-        $data = ['orders' => $orders];
+        // 2. Gọi Model với tham số lọc
+        $orders = $orderModel->getActiveOrders($current_status);
+
+        // 3. Gửi dữ liệu sang View (Kèm biến $current_status để tô màu Tab)
+        $data = [
+            'orders' => $orders,
+            'current_status' => $current_status
+        ];
         $this->loadView('staff/order_board', $data);
     }
 
